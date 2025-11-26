@@ -25,21 +25,21 @@
         }
 
         const BRANDS = [
-            { name: 'Золотое Яблоко', emoji: '💄', color: 'from-yellow-400 to-amber-500' },
-            { name: 'Tiffany & Co.', emoji: '💍', color: 'from-cyan-400 to-blue-400' },
-            { name: 'Cartier', emoji: '💎', color: 'from-red-600 to-red-700' },
-            { name: '12 STOREEZ', emoji: '👗', color: 'from-gray-800 to-black' },
-            { name: 'Zara', emoji: '👔', color: 'from-gray-700 to-gray-900' },
-            { name: 'Mango', emoji: '👚', color: 'from-orange-400 to-orange-500' },
-            { name: 'H&M', emoji: '👕', color: 'from-red-500 to-red-600' },
-            { name: 'Massimo Dutti', emoji: '🧥', color: 'from-amber-700 to-amber-900' },
-            { name: 'Bershka', emoji: '👖', color: 'from-pink-500 to-rose-600' },
-            { name: 'LOVE REPUBLIC', emoji: '💕', color: 'from-pink-400 to-pink-600' },
-            { name: 'Zarina', emoji: '👠', color: 'from-purple-400 to-purple-600' },
-            { name: 'Wildberries', emoji: '🛍️', color: 'from-purple-600 to-purple-800' },
-            { name: 'Ozon', emoji: '📦', color: 'from-blue-600 to-blue-700' },
-            { name: 'Lamoda', emoji: '👗', color: 'from-pink-500 to-purple-600' },
-            { name: 'Calzedonia', emoji: '👙', color: 'from-rose-400 to-pink-500' }
+            { name: 'Золотое Яблоко', logo: 'https://logo.clearbit.com/goldapple.ru', color: 'from-yellow-400 to-amber-500' },
+            { name: 'Tiffany & Co.', logo: 'https://logo.clearbit.com/tiffany.com', color: 'from-cyan-400 to-blue-400' },
+            { name: 'Cartier', logo: 'https://logo.clearbit.com/cartier.com', color: 'from-red-600 to-red-700' },
+            { name: '12 STOREEZ', logo: 'https://logo.clearbit.com/12storeez.com', color: 'from-gray-800 to-black' },
+            { name: 'Zara', logo: 'https://logo.clearbit.com/zara.com', color: 'from-gray-700 to-gray-900' },
+            { name: 'Mango', logo: 'https://logo.clearbit.com/mango.com', color: 'from-orange-400 to-orange-500' },
+            { name: 'H&M', logo: 'https://logo.clearbit.com/hm.com', color: 'from-red-500 to-red-600' },
+            { name: 'Massimo Dutti', logo: 'https://logo.clearbit.com/massimodutti.com', color: 'from-amber-700 to-amber-900' },
+            { name: 'Bershka', logo: 'https://logo.clearbit.com/bershka.com', color: 'from-pink-500 to-rose-600' },
+            { name: 'LOVE REPUBLIC', logo: 'https://logo.clearbit.com/loverepublic.ru', color: 'from-pink-400 to-pink-600' },
+            { name: 'Zarina', logo: 'https://logo.clearbit.com/zarina.ru', color: 'from-purple-400 to-purple-600' },
+            { name: 'Wildberries', logo: 'https://logo.clearbit.com/wildberries.ru', color: 'from-purple-600 to-purple-800' },
+            { name: 'Ozon', logo: 'https://logo.clearbit.com/ozon.ru', color: 'from-blue-600 to-blue-700' },
+            { name: 'Lamoda', logo: 'https://logo.clearbit.com/lamoda.ru', color: 'from-pink-500 to-purple-600' },
+            { name: 'Calzedonia', logo: 'https://logo.clearbit.com/calzedonia.com', color: 'from-rose-400 to-pink-500' }
         ];
 
         let currentView = 'home';
@@ -94,8 +94,8 @@
                                 <div class="flex gap-4 pb-4">
                                     ${BRANDS.map((brand, i) => `
                                         <button onclick="showBrandModal('${brand.name}')" class="flex-shrink-0 w-32 transform hover:scale-105 transition-all">
-                                            <div class="bg-gradient-to-br ${brand.color} rounded-3xl aspect-square flex items-center justify-center mb-2 text-5xl shadow-lg hover:shadow-xl transition-all">
-                                                ${brand.emoji}
+                                            <div class="bg-white rounded-3xl aspect-square flex items-center justify-center mb-2 p-4 shadow-lg hover:shadow-xl transition-all">
+                                                <img src="${brand.logo}" alt="${brand.name}" class="w-full h-full object-contain" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'text-2xl\\'>🏪</div>'">
                                             </div>
                                             <div class="text-sm font-semibold text-center text-gray-700">${brand.name}</div>
                                         </button>
