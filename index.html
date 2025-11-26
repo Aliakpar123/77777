@@ -1,312 +1,324 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Merci Wish List</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            overflow-x: hidden;
-        }
-        * {
-            box-sizing: border-box;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        @keyframes slideUp {
-            from { 
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to { 
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        .animate-fadeIn {
-            animation: fadeIn 0.3s ease-out;
-        }
-        .animate-slideUp {
-            animation: slideUp 0.4s ease-out;
-        }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Merci Wish List</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <script src="https://unpkg.com/lucide@latest"></script> 
+    <script>
+        lucide.createIcons(); 
+    </script>
+    
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            overflow-x: hidden;
+        }
+        * {
+            box-sizing: border-box;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideUp {
+            from { 
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .animate-fadeIn {
+            animation: fadeIn 0.3s ease-out;
+        }
+        .animate-slideUp {
+            animation: slideUp 0.4s ease-out;
+        }
+    </style>
 </head>
 <body>
-    <div id="root"></div>
+    <div id="root"></div>
 
-    <script type="text/babel">
-        const { useState, useEffect } = React;
-        const { Heart, Gift, Plus, Trash2, Edit2, X, Upload, Sparkles } = lucide;
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        const { Heart, Gift, Plus, Trash2, Edit2, X, Upload, Sparkles } = lucide;
 
-        const BRANDS = [
-            { name: 'Золотое Яблоко', logo: 'https://logo-teka.com/wp-content/uploads/2025/07/zolotoe-yabloko-sign-logo.svg', color: 'bg-gradient-to-br from-yellow-400 to-amber-500' },
-            { name: 'Tiffany & Co.', domain: 'tiffany.com', color: 'bg-gradient-to-br from-cyan-400 to-blue-400' },
-            { name: 'Cartier', domain: 'cartier.com', color: 'bg-gradient-to-br from-red-600 to-red-700' },
-            { name: '12 STOREEZ', domain: '12storeez.com', color: 'bg-gradient-to-br from-gray-800 to-black' },
-            { name: 'Zara', domain: 'zara.com', color: 'bg-gradient-to-br from-gray-700 to-gray-900' },
-            { name: 'Mango', domain: 'mango.com', color: 'bg-gradient-to-br from-orange-400 to-orange-500' },
-            { name: 'H&M', domain: 'hm.com', color: 'bg-gradient-to-br from-red-500 to-red-600' },
-            { name: 'Massimo Dutti', domain: 'massimodutti.com', color: 'bg-gradient-to-br from-amber-700 to-amber-900' },
-            { name: 'Bershka', domain: 'bershka.com', color: 'bg-gradient-to-br from-pink-500 to-rose-600' },
-            { name: 'LOVE REPUBLIC', domain: 'loverepublic.ru', color: 'bg-gradient-to-br from-pink-400 to-pink-600' },
-            { name: 'Zarina', domain: 'zarina.ru', color: 'bg-gradient-to-br from-purple-400 to-purple-600' },
-            { name: 'Wildberries', domain: 'wildberries.ru', color: 'bg-gradient-to-br from-purple-600 to-purple-800' },
-            { name: 'Ozon', domain: 'ozon.ru', color: 'bg-gradient-to-br from-blue-600 to-blue-700' },
-            { name: 'Lamoda', domain: 'lamoda.ru', color: 'bg-gradient-to-br from-pink-500 to-purple-600' },
-            { name: 'Calzedonia Intimissimi', domain: 'calzedonia.com', color: 'bg-gradient-to-br from-rose-400 to-pink-500' },
-        ];
+        const BRANDS = [
+            { name: 'Золотое Яблоко', logo: 'https://logo-teka.com/wp-content/uploads/2025/07/zolotoe-yabloko-sign-logo.svg', color: 'bg-gradient-to-br from-yellow-400 to-amber-500' },
+            { name: 'Tiffany & Co.', domain: 'tiffany.com', color: 'bg-gradient-to-br from-cyan-400 to-blue-400' },
+            { name: 'Cartier', domain: 'cartier.com', color: 'bg-gradient-to-br from-red-600 to-red-700' },
+            { name: '12 STOREEZ', domain: '12storeez.com', color: 'bg-gradient-to-br from-gray-800 to-black' },
+            { name: 'Zara', domain: 'zara.com', color: 'bg-gradient-to-br from-gray-700 to-gray-900' },
+            { name: 'Mango', domain: 'mango.com', color: 'bg-gradient-to-br from-orange-400 to-orange-500' },
+            { name: 'H&M', domain: 'hm.com', color: 'bg-gradient-to-br from-red-500 to-red-600' },
+            { name: 'Massimo Dutti', domain: 'massimodutti.com', color: 'bg-gradient-to-br from-amber-700 to-amber-900' },
+            { name: 'Bershka', domain: 'bershka.com', color: 'bg-gradient-to-br from-pink-500 to-rose-600' },
+            { name: 'LOVE REPUBLIC', domain: 'loverepublic.ru', color: 'bg-gradient-to-br from-pink-400 to-pink-600' },
+            { name: 'Zarina', domain: 'zarina.ru', color: 'bg-gradient-to-br from-purple-400 to-purple-600' },
+            { name: 'Wildberries', domain: 'wildberries.ru', color: 'bg-gradient-to-br from-purple-600 to-purple-800' },
+            { name: 'Ozon', domain: 'ozon.ru', color: 'bg-gradient-to-br from-blue-600 to-blue-700' },
+            { name: 'Lamoda', domain: 'lamoda.ru', color: 'bg-gradient-to-br from-pink-500 to-purple-600' },
+            { name: 'Calzedonia Intimissimi', domain: 'calzedonia.com', color: 'bg-gradient-to-br from-rose-400 to-pink-500' },
+        ];
 
-        function MerciWishList() {
-            const [currentView, setCurrentView] = useState('home');
-            const [wishes, setWishes] = useState([]);
-            const [showAddForm, setShowAddForm] = useState(false);
-            const [editingId, setEditingId] = useState(null);
-            const [showBrandModal, setShowBrandModal] = useState(false);
-            const [selectedBrand, setSelectedBrand] = useState(null);
-            const [formData, setFormData] = useState({ title: '', image: null });
+        function MerciWishList() {
+            const [currentView, setCurrentView] = useState('home');
+            const [wishes, setWishes] = useState([]);
+            const [showAddForm, setShowAddForm] = useState(false);
+            const [editingId, setEditingId] = useState(null);
+            const [showBrandModal, setShowBrandModal] = useState(false);
+            const [selectedBrand, setSelectedBrand] = useState(null);
+            const [formData, setFormData] = useState({ title: '', image: null });
 
-            useEffect(() => {
-                if (window.Telegram?.WebApp) {
-                    window.Telegram.WebApp.ready();
-                    window.Telegram.WebApp.expand();
-                }
-                loadWishes();
-            }, []);
+            useEffect(() => {
+                if (window.Telegram?.WebApp) {
+                    window.Telegram.WebApp.ready();
+                    window.Telegram.WebApp.expand();
+                }
+                loadWishes();
+            }, []);
 
-            const loadWishes = async () => {
-                try {
-                    const result = await window.storage.get('merci_wishes');
-                    if (result?.value) {
-                        setWishes(JSON.parse(result.value));
-                    }
-                } catch (e) {
-                    const saved = localStorage.getItem('merci_wishes');
-                    if (saved) setWishes(JSON.parse(saved));
-                }
-            };
+            const loadWishes = async () => {
+                try {
+                    const result = await window.storage.get('merci_wishes');
+                    if (result?.value) {
+                        setWishes(JSON.parse(result.value));
+                    }
+                } catch (e) {
+                    const saved = localStorage.getItem('merci_wishes');
+                    if (saved) setWishes(JSON.parse(saved));
+                }
+            };
 
-            const saveWishes = async (updatedWishes) => {
-                try {
-                    await window.storage.set('merci_wishes', JSON.stringify(updatedWishes));
-                } catch (e) {
-                    localStorage.setItem('merci_wishes', JSON.stringify(updatedWishes));
-                }
-            };
+            const saveWishes = async (updatedWishes) => {
+                try {
+                    await window.storage.set('merci_wishes', JSON.stringify(updatedWishes));
+                } catch (e) {
+                    localStorage.setItem('merci_wishes', JSON.stringify(updatedWishes));
+                }
+            };
 
-            const addWish = () => {
-                if (!formData.title.trim()) return;
-                const newWish = {
-                    id: Date.now(),
-                    title: formData.title,
-                    image: formData.image,
-                    createdAt: new Date().toISOString()
-                };
-                const updated = [newWish, ...wishes];
-                setWishes(updated);
-                saveWishes(updated);
-                resetForm();
-            };
+            const addWish = () => {
+                if (!formData.title.trim()) return;
+                const newWish = {
+                    id: Date.now(),
+                    title: formData.title,
+                    image: formData.image,
+                    createdAt: new Date().toISOString()
+                };
+                const updated = [newWish, ...wishes];
+                setWishes(updated);
+                saveWishes(updated);
+                resetForm();
+            };
 
-            const updateWish = () => {
-                const updated = wishes.map(w =>
-                    w.id === editingId ? { ...w, title: formData.title, image: formData.image } : w
-                );
-                setWishes(updated);
-                saveWishes(updated);
-                resetForm();
-                setEditingId(null);
-            };
+            const updateWish = () => {
+                const updated = wishes.map(w =>
+                    w.id === editingId ? { ...w, title: formData.title, image: formData.image } : w
+                );
+                setWishes(updated);
+                saveWishes(updated);
+                resetForm();
+                setEditingId(null);
+            };
 
-            const deleteWish = (id) => {
-                const updated = wishes.filter(w => w.id !== id);
-                setWishes(updated);
-                saveWishes(updated);
-            };
+            const deleteWish = (id) => {
+                const updated = wishes.filter(w => w.id !== id);
+                setWishes(updated);
+                saveWishes(updated);
+            };
 
-            const startEdit = (wish) => {
-                setEditingId(wish.id);
-                setFormData({ title: wish.title, image: wish.image });
-                setShowAddForm(true);
-            };
+            const startEdit = (wish) => {
+                setEditingId(wish.id);
+                setFormData({ title: wish.title, image: wish.image });
+                setShowAddForm(true);
+            };
 
-            const resetForm = () => {
-                setFormData({ title: '', image: null });
-                setShowAddForm(false);
-            };
+            const resetForm = () => {
+                setFormData({ title: '', image: null });
+                setShowAddForm(false);
+            };
 
-            const handleImageUpload = (e) => {
-                const file = e.target.files[0];
-                if (file && file.type.startsWith('image/')) {
-                    const reader = new FileReader();
-                    reader.onloadend = () => {
-                        setFormData({ ...formData, image: reader.result });
-                    };
-                    reader.readAsDataURL(file);
-                }
-            };
+            const handleImageUpload = (e) => {
+                const file = e.target.files[0];
+                if (file && file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                        setFormData({ ...formData, image: reader.result });
+                    };
+                    reader.readAsDataURL(file);
+                }
+            };
 
-            const handleBrandClick = (brand) => {
-                setSelectedBrand(brand);
-                setShowBrandModal(true);
-                setTimeout(() => setShowBrandModal(false), 2000);
-            };
+            const handleBrandClick = (brand) => {
+                setSelectedBrand(brand);
+                setShowBrandModal(true);
+                setTimeout(() => setShowBrandModal(false), 2000);
+            };
 
-            return (
-                <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 pb-24">
-                    {showBrandModal && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-fadeIn">
-                            <div className="bg-white rounded-3xl p-8 shadow-2xl max-w-sm mx-4 transform animate-slideUp relative">
-                                <button onClick={() => setShowBrandModal(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors">
-                                    <X className="w-6 h-6" />
-                                </button>
-                                <div className="text-center">
-                                    <div className="bg-gradient-to-br from-pink-100 to-purple-100 w-20 h-20 rounded-full mx-auto mb-4 flex items-center justify-center">
-                                        <Sparkles className="w-10 h-10 text-pink-500" />
-                                    </div>
-                                    <h3 className="text-2xl font-bold text-gray-800 mb-2">{selectedBrand?.name}</h3>
-                                    <p className="text-gray-600">Скоро появится!</p>
-                                </div>
-                            </div>
-                        </div>
-                    )}
+            return (
+                <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 pb-24">
+                    {showBrandModal && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-fadeIn">
+                            <div className="bg-white rounded-3xl p-8 shadow-2xl max-w-sm mx-4 transform animate-slideUp relative">
+                                <button onClick={() => setShowBrandModal(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors">
+                                    <X className="w-6 h-6" />
+                                </button>
+                                <div className="text-center">
+                                    <div className="bg-gradient-to-br from-pink-100 to-purple-100 w-20 h-20 rounded-full mx-auto mb-4 flex items-center justify-center">
+                                        <Sparkles className="w-10 h-10 text-pink-500" />
+                                    </div>
+                                    <h3 className="text-2xl font-bold text-gray-800 mb-2">{selectedBrand?.name}</h3>
+                                    <p className="text-gray-600">Скоро появится!</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
-                    <div className="px-6 pt-8 pb-6">
-                        <div className="flex items-center gap-3 mb-6">
-                            <div className="bg-gradient-to-br from-pink-400 to-purple-500 p-3 rounded-2xl shadow-lg">
-                                <Gift className="w-8 h-8 text-white" />
-                            </div>
-                            <div>
-                                <h1 className="text-4xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent">Merci</h1>
-                                <p className="text-sm text-gray-500">Wish List</p>
-                            </div>
-                        </div>
+                    <div className="px-6 pt-8 pb-6">
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="bg-gradient-to-br from-pink-400 to-purple-500 p-3 rounded-2xl shadow-lg">
+                                <Gift className="w-8 h-8 text-white" />
+                            </div>
+                            <div>
+                                <h1 className="text-4xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent">Merci</h1>
+                                <p className="text-sm text-gray-500">Wish List</p>
+                            </div>
+                        </div>
 
-                        <button onClick={() => setCurrentView('mylist')} className="w-full bg-gradient-to-r from-pink-400 to-purple-500 rounded-3xl p-6 mb-6 shadow-xl hover:shadow-2xl transition-all transform hover:scale-[1.02]">
-                            <div className="flex items-center justify-between">
-                                <div className="text-left">
-                                    <div className="flex items-center gap-3 mb-2">
-                                        <Heart className="w-6 h-6 text-white fill-white" />
-                                        <h3 className="text-xl font-bold text-white">Мой Wish List</h3>
-                                    </div>
-                                    <p className="text-pink-100 text-sm">{wishes.length > 0 ? `${wishes.length} желаний` : 'Создайте свой персональный список'}</p>
-                                </div>
-                                <div className="text-2xl text-white">→</div>
-                            </div>
-                        </button>
-                    </div>
+                        <button onClick={() => setCurrentView('mylist')} className="w-full bg-gradient-to-r from-pink-400 to-purple-500 rounded-3xl p-6 mb-6 shadow-xl hover:shadow-2xl transition-all transform hover:scale-[1.02]">
+                            <div className="flex items-center justify-between">
+                                <div className="text-left">
+                                    <div className="flex items-center gap-3 mb-2">
+                                        <Heart className="w-6 h-6 text-white fill-white" />
+                                        <h3 className="text-xl font-bold text-white">Мой Wish List</h3>
+                                    </div>
+                                    <p className="text-pink-100 text-sm">{wishes.length > 0 ? `${wishes.length} желаний` : 'Создайте свой персональный список'}</p>
+                                </div>
+                                <div className="text-2xl text-white">→</div>
+                            </div>
+                        </button>
+                    </div>
 
-                    <div className="px-6">
-                        {currentView === 'home' && (
-                            <div className="space-y-8">
-                                <div>
-                                    <h2 className="text-2xl font-bold mb-4 text-gray-700">Идеи подарков</h2>
-                                    <div className="overflow-x-auto -mx-6 px-6">
-                                        <div className="flex gap-4 pb-4">
-                                            {BRANDS.map((brand, index) => (
-                                                <button key={index} onClick={() => handleBrandClick(brand)} className="flex-shrink-0 w-32 transform hover:scale-105 transition-all">
-                                                    <div className="bg-white rounded-3xl aspect-square flex items-center justify-center mb-2 p-4 shadow-lg hover:shadow-xl transition-all">
-                                                        <img src={brand.logo || `https://logo.clearbit.com/${brand.domain}`} alt={brand.name} className="w-full h-full object-contain" onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} />
-                                                        <div className={`hidden w-full h-full ${brand.color} rounded-2xl items-center justify-center text-2xl font-bold text-white`}>{brand.name.charAt(0)}</div>
-                                                    </div>
-                                                    <div className="text-sm font-semibold text-center text-gray-700">{brand.name}</div>
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
+                    <div className="px-6">
+                        {currentView === 'home' && (
+                            <div className="space-y-8">
+                                <div>
+                                    <h2 className="text-2xl font-bold mb-4 text-gray-700">Идеи подарков</h2>
+                                    <div className="overflow-x-auto -mx-6 px-6">
+                                        <div className="flex gap-4 pb-4">
+                                            {BRANDS.map((brand, index) => (
+                                                <button key={index} onClick={() => handleBrandClick(brand)} className="flex-shrink-0 w-32 transform hover:scale-105 transition-all">
+                                                    <div className="bg-white rounded-3xl aspect-square flex items-center justify-center mb-2 p-4 shadow-lg hover:shadow-xl transition-all">
+                                                        <img src={brand.logo || `https://logo.clearbit.com/${brand.domain}`} alt={brand.name} className="w-full h-full object-contain" onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} />
+                                                        <div className={`hidden w-full h-full ${brand.color} rounded-2xl items-center justify-center text-2xl font-bold text-white`}>{brand.name.charAt(0)}</div>
+                                                    </div>
+                                                    <div className="text-sm font-semibold text-center text-gray-700">{brand.name}</div>
+                                                </button>
+                                            ))}
+                                        </div>
+                                        </div>
+                                        </div>
+                            </div>
+                        )}
 
-                        {currentView === 'mylist' && (
-                            <div className="space-y-4">
-                                <button onClick={() => setCurrentView('home')} className="text-pink-500 font-medium mb-4 flex items-center gap-2">← Назад</button>
-                                <h2 className="text-2xl font-bold mb-6 text-gray-700">Мой Wish List</h2>
+                        {currentView === 'mylist' && (
+                            <div className="space-y-4">
+                                <button onClick={() => setCurrentView('home')} className="text-pink-500 font-medium mb-4 flex items-center gap-2">← Назад</button>
+                                <h2 className="text-2xl font-bold mb-6 text-gray-700">Мой Wish List</h2>
 
-                                {!showAddForm && (
-                                    <button onClick={() => setShowAddForm(true)} className="w-full bg-white rounded-3xl p-6 shadow-lg border-2 border-pink-200 hover:border-pink-300 transition-all flex items-center justify-center gap-2 text-pink-600 font-semibold">
-                                        <Plus className="w-5 h-5" />Добавить желание
-                                    </button>
-                                )}
+                                {!showAddForm && (
+                                    <button onClick={() => setShowAddForm(true)} className="w-full bg-white rounded-3xl p-6 shadow-lg border-2 border-pink-200 hover:border-pink-300 transition-all flex items-center justify-center gap-2 text-pink-600 font-semibold">
+                                        <Plus className="w-5 h-5" />Добавить желание
+                                    </button>
+                                )}
 
-                                {showAddForm && (
-                                    <div className="bg-white rounded-3xl p-6 shadow-lg">
-                                        <div className="flex justify-between items-center mb-4">
-                                            <h3 className="text-xl font-bold text-gray-800">{editingId ? 'Редактировать' : 'Новое желание'}</h3>
-                                            <button onClick={resetForm} className="text-gray-400 hover:text-gray-600"><X className="w-6 h-6" /></button>
-                                        </div>
-                                        <input type="text" placeholder="Название *" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} className="w-full p-3 border-2 border-gray-200 rounded-2xl mb-4 focus:border-pink-400 focus:outline-none" />
-                                        <div className="mb-4">
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">Фото</label>
-                                            <div className="flex items-center gap-3">
-                                                <label className="flex-1 cursor-pointer">
-                                                    <div className="border-2 border-dashed border-gray-300 rounded-2xl p-4 text-center hover:border-pink-400 transition-colors">
-                                                        <Upload className="w-6 h-6 mx-auto mb-2 text-gray-400" />
-                                                        <span className="text-sm text-gray-600">Загрузить фото</span>
-                                                    </div>
-                                                    <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
-                                                </label>
-                                                {formData.image && (
-                                                    <div className="relative w-24 h-24">
-                                                        <img src={formData.image} alt="Preview" className="w-full h-full object-cover rounded-2xl" />
-                                                        <button onClick={() => setFormData({ ...formData, image: null })} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1">
-                                                            <X className="w-4 h-4" />
-                                                        </button>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                        <button onClick={editingId ? updateWish : addWish} disabled={!formData.title.trim()} className="w-full bg-gradient-to-r from-pink-400 to-purple-500 text-white py-3 rounded-2xl font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed">
-                                            {editingId ? 'Сохранить' : 'Добавить'}
-                                        </button>
-                                    </div>
-                                )}
+                                {showAddForm && (
+                                    <div className="bg-white rounded-3xl p-6 shadow-lg">
+                                        <div className="flex justify-between items-center mb-4">
+                                            <h3 className="text-xl font-bold text-gray-800">{editingId ? 'Редактировать' : 'Новое желание'}</h3>
+                                            <button onClick={resetForm} className="text-gray-400 hover:text-gray-600"><X className="w-6 h-6" /></button>
+                                        </div>
+                                        <input type="text" placeholder="Название *" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} className="w-full p-3 border-2 border-gray-200 rounded-2xl mb-4 focus:border-pink-400 focus:outline-none" />
+                                        <div className="mb-4">
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">Фото</label>
+                                            <div className="flex items-center gap-3">
+                                                <label className="flex-1 cursor-pointer">
+                                                    <div className="border-2 border-dashed border-gray-300 rounded-2xl p-4 text-center hover:border-pink-400 transition-colors">
+                                                        <Upload className="w-6 h-6 mx-auto mb-2 text-gray-400" />
+                                                        <span className="text-sm text-gray-600">Загрузить фото</span>
+                                                    </div>
+                                                    <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+                                                </label>
+                                                {formData.image && (
+                                                    <div className="relative w-24 h-24">
+                                                        <img src={formData.image} alt="Preview" className="w-full h-full object-cover rounded-2xl" />
+                                                        <button onClick={() => setFormData({ ...formData, image: null })} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1">
+                                                            <X className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <button onClick={editingId ? updateWish : addWish} disabled={!formData.title.trim()} className="w-full bg-gradient-to-r from-pink-400 to-purple-500 text-white py-3 rounded-2xl font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                                            {editingId ? 'Сохранить' : 'Добавить'}
+                                        </button>
+                                    </div>
+                                )}
 
-                                {wishes.length === 0 && !showAddForm ? (
-                                    <div className="bg-white rounded-3xl p-8 text-center shadow-lg">
-                                        <div className="bg-gradient-to-br from-pink-100 to-purple-100 w-24 h-24 rounded-full mx-auto mb-4 flex items-center justify-center">
-                                            <Heart className="w-12 h-12 text-pink-500" />
-                                        </div>
-                                        <p className="text-gray-600 font-medium">Начните создавать свой список желаний!</p>
-                                    </div>
-                                ) : (
-                                    <div className="space-y-4 mt-6">
-                                        {wishes.map(wish => (
-                                            <div key={wish.id} className="bg-white rounded-3xl p-5 shadow-lg">
-                                                <div className="flex gap-4">
-                                                    {wish.image && <img src={wish.image} alt={wish.title} className="w-24 h-24 object-cover rounded-2xl flex-shrink-0" />}
-                                                    <div className="flex-1 min-w-0">
-                                                        <h3 className="font-bold text-lg text-gray-800 mb-3">{wish.title}</h3>
-                                                        <div className="flex gap-2">
-                                                            <button onClick={() => startEdit(wish)} className="p-2 text-blue-500 hover:bg-blue-50 rounded-xl transition-colors">
-                                                                <Edit2 className="w-4 h-4" />
-                                                            </button>
-                                                            <button onClick={() => deleteWish(wish.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-xl transition-colors">
-                                                                <Trash2 className="w-4 h-4" />
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                        )}
-                    </div>
-                </div>
-            );
-        }
+                                {wishes.length === 0 && !showAddForm ? (
+                                    <div className="bg-white rounded-3xl p-8 text-center shadow-lg">
+                                        <div className="bg-gradient-to-br from-pink-100 to-purple-100 w-24 h-24 rounded-full mx-auto mb-4 flex items-center justify-center">
+                                            <Heart className="w-12 h-12 text-pink-500" />
+                                        </div>
+                                        <p className="text-gray-600 font-medium">Начните создавать свой список желаний!</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-4 mt-6">
+                                        {wishes.map(wish => (
+                                            <div key={wish.id} className="bg-white rounded-3xl shadow-lg flex items-center p-4 animate-fadeIn">
+                                                {wish.image ? (
+                                                    <img src={wish.image} alt={wish.title} className="w-16 h-16 object-cover rounded-xl flex-shrink-0 mr-4" />
+                                                ) : (
+                                                    <div className="w-16 h-16 bg-gray-100 rounded-xl flex items-center justify-center flex-shrink-0 mr-4">
+                                                        <Gift className="w-8 h-8 text-gray-400" />
+                                                    </div>
+                                                )}
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-lg font-semibold text-gray-800 truncate">{wish.title}</p>
+                                                </div>
+                                                <div className="flex space-x-2 ml-4 flex-shrink-0">
+                                                    <button onClick={() => startEdit(wish)} className="p-2 bg-pink-100 rounded-full text-pink-600 hover:bg-pink-200 transition-colors">
+                                                        <Edit2 className="w-5 h-5" />
+                                                    </button>
+                                                    <button onClick={() => deleteWish(wish.id)} className="p-2 bg-red-100 rounded-full text-red-600 hover:bg-red-200 transition-colors">
+                                                        <Trash2 className="w-5 h-5" />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        }
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<MerciWishList />);
-    </script>
+        ReactDOM.render(<MerciWishList />, document.getElementById('root'));
+    </script>
+
+</body>
+</html>
