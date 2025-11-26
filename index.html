@@ -46,11 +46,38 @@
         let wishes = [];
         let showAddForm = false;
         let editingId = null;
-        let formData = { title: '', image: '', shopUrl: '' };
+        let formData = { title: '', shopUrl: '', price: '', image: '' };
+        let isGuestMode = false;
+        let guestWishes = [];
+        let activeTab = 'home'; // home, friends, tasks, rating
 
         function loadWishes() {
-            const saved = localStorage.getItem('merci_wishes');
-            if (saved) wishes = JSON.parse(saved);
+            // Проверяем, есть ли параметр share в URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const shareToken = urlParams.get('share');
+            
+            if (shareToken) {
+                // Гостевой режим - загружаем публичный список
+                loadSharedWishes(shareToken);
+            } else {
+                // Обычный режим - загружаем свой список
+                const saved = localStorage.getItem('merci_wishes');
+                if (saved) wishes = JSON.parse(saved);
+            }
+        }
+
+        async function loadSharedWishes(token) {
+            try {
+                const result = await window.storage.get(`share_${token}`, true);
+                if (result?.value) {
+                    const data = JSON.parse(result.value);
+                    guestWishes = data.wishes || [];
+                    isGuestMode = true;
+                    currentView = 'mylist';
+                }
+            } catch (e) {
+                console.log('Не удалось загрузить публичный список');
+            }
         }
 
         function saveWishes() {
@@ -60,7 +87,7 @@
         function render() {
             const app = document.getElementById('app');
             
-            if (currentView === 'home') {
+            if (activeTab === 'home' && currentView === 'home') {
                 app.innerHTML = `
                     <div class="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 pb-24">
                         <div class="px-6 pt-8 pb-6">
@@ -105,20 +132,121 @@
                         </div>
                     </div>
                 `;
+            } else if (activeTab === 'friends') {
+                app.innerHTML = `
+                    <div class="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 pb-24">
+                        <div class="px-6 pt-8 pb-6">
+                            <h1 class="text-3xl font-bold text-gray-800 mb-2">👥 Друзья</h1>
+                            <p class="text-gray-500">Списки желаний ваших друзей</p>
+                        </div>
+                        <div class="px-6">
+                            <div class="bg-white rounded-3xl p-8 text-center shadow-lg">
+                                <div class="text-6xl mb-4">🎁</div>
+                                <p class="text-gray-600 font-medium">Скоро здесь появятся списки ваших друзей!</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (activeTab === 'tasks') {
+                app.innerHTML = `
+                    <div class="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 pb-24">
+                        <div class="px-6 pt-8 pb-6">
+                            <h1 class="text-3xl font-bold text-gray-800 mb-2">✨ Задания</h1>
+                            <p class="text-gray-500">Выполняйте задания и получайте бонусы</p>
+                        </div>
+                        <div class="px-6">
+                            <div class="bg-white rounded-3xl p-6 shadow-lg mb-4">
+                                <div class="flex items-center gap-4">
+                                    <div class="text-4xl">🎯</div>
+                                    <div class="flex-1">
+                                        <h3 class="font-bold text-gray-800">Добавить 5 желаний</h3>
+                                        <p class="text-sm text-gray-500">Награда: +50 баллов</p>
+                                    </div>
+                                    <div class="text-pink-600 font-bold">${wishes.length}/5</div>
+                                </div>
+                            </div>
+                            <div class="bg-white rounded-3xl p-6 shadow-lg mb-4">
+                                <div class="flex items-center gap-4">
+                                    <div class="text-4xl">👥</div>
+                                    <div class="flex-1">
+                                        <h3 class="font-bold text-gray-800">Пригласить друга</h3>
+                                        <p class="text-sm text-gray-500">Награда: +100 баллов</p>
+                                    </div>
+                                    <div class="text-pink-600 font-bold">0/1</div>
+                                </div>
+                            </div>
+                            <div class="bg-white rounded-3xl p-6 shadow-lg">
+                                <div class="flex items-center gap-4">
+                                    <div class="text-4xl">🔗</div>
+                                    <div class="flex-1">
+                                        <h3 class="font-bold text-gray-800">Поделиться списком</h3>
+                                        <p class="text-sm text-gray-500">Награда: +30 баллов</p>
+                                    </div>
+                                    <div class="text-pink-600 font-bold">0/1</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (activeTab === 'rating') {
+                app.innerHTML = `
+                    <div class="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 pb-24">
+                        <div class="px-6 pt-8 pb-6">
+                            <h1 class="text-3xl font-bold text-gray-800 mb-2">🏆 Рейтинг</h1>
+                            <p class="text-gray-500">Топ пользователей Merci</p>
+                        </div>
+                        <div class="px-6">
+                            <div class="bg-gradient-to-r from-yellow-400 to-orange-500 rounded-3xl p-6 shadow-xl mb-6 text-white">
+                                <div class="flex items-center gap-4">
+                                    <div class="text-6xl">👑</div>
+                                    <div>
+                                        <div class="text-sm opacity-90">Ваш рейтинг</div>
+                                        <div class="text-3xl font-bold">0 баллов</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="space-y-3">
+                                ${[1,2,3,4,5].map((i) => `
+                                    <div class="bg-white rounded-2xl p-4 shadow-lg flex items-center gap-3">
+                                        <div class="text-2xl font-bold ${i === 1 ? 'text-yellow-500' : i === 2 ? 'text-gray-400' : i === 3 ? 'text-orange-600' : 'text-gray-500'}">${i}</div>
+                                        <div class="w-12 h-12 rounded-full bg-gradient-to-br from-pink-400 to-purple-500 flex items-center justify-center text-white font-bold">U${i}</div>
+                                        <div class="flex-1">
+                                            <div class="font-bold text-gray-800">Пользователь ${i}</div>
+                                            <div class="text-sm text-gray-500">${1000 - i * 100} баллов</div>
+                                        </div>
+                                        ${i <= 3 ? `<div class="text-2xl">${i === 1 ? '🥇' : i === 2 ? '🥈' : '🥉'}</div>` : ''}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
             } else if (currentView === 'mylist') {
                 app.innerHTML = `
                     <div class="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 pb-24 px-6">
                         <div class="flex items-center justify-between mb-6 mt-8">
-                            <button onclick="goHome()" class="text-pink-500 font-medium">← Назад</button>
-                            <button onclick="shareWishList()" class="flex items-center gap-2 bg-gradient-to-r from-pink-400 to-purple-500 text-white px-4 py-2 rounded-full font-semibold">
-                                <span>🔗</span> Поделиться
+                            <button onclick="goHome()" class="text-pink-500 font-medium flex items-center gap-1">
+                                <span>←</span> ${isGuestMode ? 'Закрыть' : 'Назад'}
                             </button>
+                            ${!isGuestMode ? `
+                                <button onclick="shareWishList()" class="bg-white p-3 rounded-full shadow-lg hover:shadow-xl transition-all">
+                                    <svg class="w-6 h-6 text-pink-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path>
+                                    </svg>
+                                </button>
+                            ` : ''}
                         </div>
-                        <h2 class="text-2xl font-bold mb-6 text-gray-700">Мой Wish List</h2>
+                        <h2 class="text-2xl font-bold mb-6 text-gray-700">${isGuestMode ? '🎁 Wish List' : 'Мой Wish List'}</h2>
 
-                        ${!showAddForm ? `
-                            <button onclick="toggleAddForm()" class="w-full bg-white rounded-3xl p-6 shadow-lg border-2 border-pink-200 hover:border-pink-300 transition-all flex items-center justify-center gap-2 text-pink-600 font-semibold mb-6">
+                        ${!showAddForm && !isGuestMode ? `
+                            <button onclick="toggleAddForm()" class="w-full bg-gradient-to-r from-pink-400 to-purple-500 rounded-3xl p-6 shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 text-white font-semibold mb-4">
                                 <span class="text-2xl">➕</span> Добавить желание
+                            </button>
+                            <button onclick="shareWishList()" class="w-full bg-white border-2 border-pink-300 rounded-3xl p-6 shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 text-pink-600 font-semibold mb-6">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path>
+                                </svg>
+                                Поделиться Wish List
                             </button>
                         ` : `
                             <div class="bg-white rounded-3xl p-6 shadow-lg mb-6">
@@ -126,23 +254,38 @@
                                     <h3 class="text-xl font-bold text-gray-800">${editingId ? 'Редактировать' : 'Новое желание'}</h3>
                                     <button onclick="toggleAddForm()" class="text-gray-400 hover:text-gray-600">✕</button>
                                 </div>
+                                
                                 <input type="text" id="wishTitle" placeholder="Название *" value="${formData.title}" class="w-full p-3 border-2 border-gray-200 rounded-2xl mb-3 focus:border-pink-400 focus:outline-none">
-                                <input type="url" id="shopUrl" placeholder="Ссылка на товар (необязательно)" value="${formData.shopUrl}" class="w-full p-3 border-2 border-gray-200 rounded-2xl mb-3 focus:border-pink-400 focus:outline-none">
-                                <input type="url" id="imageUrl" placeholder="Ссылка на фото (необязательно)" value="${formData.image}" class="w-full p-3 border-2 border-gray-200 rounded-2xl mb-4 focus:border-pink-400 focus:outline-none">
-                                <button onclick="saveWish()" class="w-full bg-gradient-to-r from-pink-400 to-purple-500 text-white py-3 rounded-2xl font-semibold">
+                                
+                                <input type="url" id="imageUrl" placeholder="Ссылка на фото" value="${formData.image}" oninput="previewImage(this.value)" class="w-full p-3 border-2 border-gray-200 rounded-2xl mb-3 focus:border-pink-400 focus:outline-none">
+                                
+                                ${formData.image ? `
+                                    <div class="mb-3 relative">
+                                        <img src="${formData.image}" alt="Preview" class="w-full h-48 object-cover rounded-2xl" onerror="this.style.display='none'">
+                                        <button type="button" onclick="removeImage()" class="absolute top-2 right-2 bg-red-500 text-white rounded-full p-2 shadow-lg hover:bg-red-600">
+                                            ✕
+                                        </button>
+                                    </div>
+                                ` : ''}
+                                
+                                <input type="text" id="wishPrice" placeholder="Цена (например: 5000 ₽)" value="${formData.price}" class="w-full p-3 border-2 border-gray-200 rounded-2xl mb-3 focus:border-pink-400 focus:outline-none">
+                                
+                                <input type="url" id="shopUrl" placeholder="Ссылка на магазин" value="${formData.shopUrl}" class="w-full p-3 border-2 border-gray-200 rounded-2xl mb-4 focus:border-pink-400 focus:outline-none">
+                                
+                                <button onclick="saveWish()" class="w-full bg-gradient-to-r from-pink-400 to-purple-500 text-white py-3 rounded-2xl font-semibold hover:shadow-lg transition-all">
                                     ${editingId ? 'Сохранить' : 'Добавить'}
                                 </button>
                             </div>
                         `}
 
-                        ${wishes.length === 0 && !showAddForm ? `
+                        ${(wishes.length === 0 && guestWishes.length === 0) && !showAddForm ? `
                             <div class="bg-white rounded-3xl p-8 text-center shadow-lg mt-6">
                                 <div class="text-6xl mb-4">💝</div>
-                                <p class="text-gray-600 font-medium">Начните создавать свой список желаний!</p>
+                                <p class="text-gray-600 font-medium">${isGuestMode ? 'Список пуст' : 'Начните создавать свой список желаний!'}</p>
                             </div>
                         ` : `
                             <div class="space-y-4 mt-6">
-                                ${wishes.map(wish => `
+                                ${(isGuestMode ? guestWishes : wishes).map(wish => `
                                     <div class="bg-white rounded-3xl shadow-lg overflow-hidden">
                                         ${wish.image ? `
                                             <a href="${wish.shopUrl || '#'}" ${wish.shopUrl ? 'target="_blank"' : ''} class="block">
@@ -151,15 +294,18 @@
                                         ` : ''}
                                         <div class="p-5">
                                             <h3 class="font-bold text-lg text-gray-800 mb-2">${wish.title}</h3>
+                                            ${wish.price ? `<p class="text-pink-600 font-semibold mb-2">${wish.price}</p>` : ''}
                                             ${wish.shopUrl ? `
                                                 <a href="${wish.shopUrl}" target="_blank" class="inline-flex items-center gap-1 text-blue-600 text-sm mb-3">
                                                     🛒 Купить в магазине
                                                 </a>
                                             ` : ''}
-                                            <div class="flex gap-2 mt-3">
-                                                <button onclick="editWish(${wish.id})" class="p-2 text-blue-500 hover:bg-blue-50 rounded-xl">✎</button>
-                                                <button onclick="deleteWish(${wish.id})" class="p-2 text-red-500 hover:bg-red-50 rounded-xl">🗑</button>
-                                            </div>
+                                            ${!isGuestMode ? `
+                                                <div class="flex gap-2 mt-3">
+                                                    <button onclick="editWish(${wish.id})" class="p-2 text-blue-500 hover:bg-blue-50 rounded-xl">✎</button>
+                                                    <button onclick="deleteWish(${wish.id})" class="p-2 text-red-500 hover:bg-red-50 rounded-xl">🗑</button>
+                                                </div>
+                                            ` : ''}
                                         </div>
                                     </div>
                                 `).join('')}
@@ -168,36 +314,116 @@
                     </div>
                 `;
             }
+
+            // Нижняя навигация (только если не гостевой режим)
+            if (!isGuestMode) {
+                const nav = document.createElement('div');
+                nav.className = 'fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-2xl z-50';
+                nav.innerHTML = `
+                    <div class="max-w-md mx-auto px-4 py-2">
+                        <div class="flex justify-around items-center">
+                            <button onclick="switchTab('home')" class="flex flex-col items-center py-2 px-4 rounded-2xl transition-all ${activeTab === 'home' ? 'bg-pink-100' : ''}">
+                                <svg class="w-6 h-6 ${activeTab === 'home' ? 'text-pink-600' : 'text-gray-400'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                                </svg>
+                                <span class="text-xs mt-1 ${activeTab === 'home' ? 'text-pink-600 font-semibold' : 'text-gray-500'}">Главная</span>
+                            </button>
+                            
+                            <button onclick="switchTab('friends')" class="flex flex-col items-center py-2 px-4 rounded-2xl transition-all ${activeTab === 'friends' ? 'bg-pink-100' : ''}">
+                                <svg class="w-6 h-6 ${activeTab === 'friends' ? 'text-pink-600' : 'text-gray-400'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                                </svg>
+                                <span class="text-xs mt-1 ${activeTab === 'friends' ? 'text-pink-600 font-semibold' : 'text-gray-500'}">Друзья</span>
+                            </button>
+                            
+                            <button onclick="switchTab('tasks')" class="flex flex-col items-center py-2 px-4 rounded-2xl transition-all ${activeTab === 'tasks' ? 'bg-pink-100' : ''}">
+                                <svg class="w-6 h-6 ${activeTab === 'tasks' ? 'text-pink-600' : 'text-gray-400'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                                </svg>
+                                <span class="text-xs mt-1 ${activeTab === 'tasks' ? 'text-pink-600 font-semibold' : 'text-gray-500'}">Задания</span>
+                            </button>
+                            
+                            <button onclick="switchTab('rating')" class="flex flex-col items-center py-2 px-4 rounded-2xl transition-all ${activeTab === 'rating' ? 'bg-pink-100' : ''}">
+                                <svg class="w-6 h-6 ${activeTab === 'rating' ? 'text-pink-600' : 'text-gray-400'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path>
+                                </svg>
+                                <span class="text-xs mt-1 ${activeTab === 'rating' ? 'text-pink-600 font-semibold' : 'text-gray-500'}">Рейтинг</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(nav);
+            }
         }
 
-        function goHome() { currentView = 'home'; render(); }
+        function switchTab(tab) {
+            activeTab = tab;
+            currentView = 'home';
+            render();
+        }
+        function goHome() { 
+            if (isGuestMode) {
+                window.location.href = window.location.origin + window.location.pathname;
+            } else {
+                activeTab = 'home';
+                currentView = 'home';
+                render();
+            }
+        }
+        
         function goToMyList() { currentView = 'mylist'; render(); }
 
         function toggleAddForm() {
             showAddForm = !showAddForm;
             if (!showAddForm) {
                 editingId = null;
-                formData = { title: '', image: '', shopUrl: '' };
+                formData = { title: '', shopUrl: '', price: '', image: '' };
             }
             render();
         }
 
+        function previewImage(url) {
+            if (url && url.startsWith('http')) {
+                formData.image = url;
+                render();
+            }
+        }
+
+        function removeImage() {
+            formData.image = '';
+            render();
+        }
+
         function saveWish() {
-            const title = document.getElementById('wishTitle').value.trim();
-            const shopUrl = document.getElementById('shopUrl').value.trim();
-            const imageUrl = document.getElementById('imageUrl').value.trim();
+            const title = document.getElementById('wishTitle')?.value.trim();
+            const imageUrl = document.getElementById('imageUrl')?.value.trim();
+            const price = document.getElementById('wishPrice')?.value.trim();
+            const shopUrl = document.getElementById('shopUrl')?.value.trim();
             
             if (!title) return alert('Введите название!');
 
             if (editingId) {
-                wishes = wishes.map(w => w.id === editingId ? { ...w, title, shopUrl, image: imageUrl } : w);
+                wishes = wishes.map(w => w.id === editingId ? { 
+                    ...w, 
+                    title, 
+                    image: imageUrl,
+                    price,
+                    shopUrl
+                } : w);
             } else {
-                wishes.unshift({ id: Date.now(), title, shopUrl, image: imageUrl, createdAt: new Date().toISOString() });
+                wishes.unshift({ 
+                    id: Date.now(), 
+                    title,
+                    image: imageUrl,
+                    price,
+                    shopUrl,
+                    createdAt: new Date().toISOString() 
+                });
             }
             
             saveWishes();
             editingId = null;
-            formData = { title: '', image: '', shopUrl: '' };
+            formData = { title: '', shopUrl: '', price: '', image: '' };
             showAddForm = false;
             render();
         }
@@ -206,7 +432,12 @@
             const wish = wishes.find(w => w.id === id);
             if (wish) {
                 editingId = id;
-                formData = { title: wish.title, image: wish.image || '', shopUrl: wish.shopUrl || '' };
+                formData = { 
+                    title: wish.title, 
+                    image: wish.image || '',
+                    price: wish.price || '',
+                    shopUrl: wish.shopUrl || ''
+                };
                 showAddForm = true;
                 render();
             }
@@ -223,9 +454,14 @@
         function showBrandModal(brandName) {
             const modal = document.createElement('div');
             modal.className = 'fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-fadeIn';
-            modal.onclick = () => modal.remove();
+            modal.onclick = (e) => {
+                if (e.target === modal) modal.remove();
+            };
             modal.innerHTML = `
-                <div class="bg-white rounded-3xl p-8 shadow-2xl max-w-sm mx-4 transform animate-slideUp">
+                <div class="bg-white rounded-3xl p-8 shadow-2xl max-w-sm mx-4 transform animate-slideUp relative" onclick="event.stopPropagation()">
+                    <button onclick="this.closest('.fixed').remove()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors w-8 h-8 flex items-center justify-center">
+                        <span class="text-2xl">✕</span>
+                    </button>
                     <div class="text-center">
                         <div class="text-6xl mb-4">✨</div>
                         <h3 class="text-2xl font-bold text-gray-800 mb-2">${brandName}</h3>
@@ -234,20 +470,57 @@
                 </div>
             `;
             document.body.appendChild(modal);
-            setTimeout(() => modal.remove(), 2000);
         }
 
         function shareWishList() {
-            const text = `🎁 Мой Wish List в Merci!\n\nУ меня ${wishes.length} ${wishes.length === 1 ? 'желание' : 'желаний'}:\n\n${wishes.slice(0, 3).map((w, i) => `${i + 1}. ${w.title}`).join('\n')}${wishes.length > 3 ? '\n...' : ''}`;
-            
-            if (window.Telegram?.WebApp) {
-                const url = window.location.href;
-                window.Telegram.WebApp.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`);
-            } else if (navigator.share) {
-                navigator.share({ title: 'Мой Wish List', text, url: window.location.href });
-            } else {
-                alert('Функция поделиться недоступна');
+            if (wishes.length === 0) {
+                return alert('Добавьте хотя бы одно желание, чтобы поделиться!');
             }
+
+            // Создаем уникальный токен
+            const token = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+            const shareData = {
+                wishes: wishes,
+                createdAt: new Date().toISOString()
+            };
+
+            // Сохраняем в публичное хранилище
+            window.storage.set(`share_${token}`, JSON.stringify(shareData), true)
+                .then(() => {
+                    const shareUrl = `${window.location.origin}${window.location.pathname}?share=${token}`;
+                    const text = `🎁 Мой Wish List в Merci!\n\nУ меня ${wishes.length} ${wishes.length === 1 ? 'желание' : 'желаний'}.\n\nПосмотрите мой список:`;
+                    
+                    if (window.Telegram?.WebApp) {
+                        window.Telegram.WebApp.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(text)}`);
+                    } else if (navigator.share) {
+                        navigator.share({ title: 'Мой Wish List', text, url: shareUrl });
+                    } else {
+                        // Показываем ссылку для копирования
+                        showShareModal(shareUrl);
+                    }
+                })
+                .catch(err => {
+                    console.error('Share error:', err);
+                    alert('Не удалось создать ссылку для обмена');
+                });
+        }
+
+        function showShareModal(url) {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-fadeIn';
+            modal.onclick = (e) => {
+                if (e.target === modal) modal.remove();
+            };
+            modal.innerHTML = `
+                <div class="bg-white rounded-3xl p-6 shadow-2xl max-w-sm mx-4 transform animate-slideUp" onclick="event.stopPropagation()">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">Поделиться списком</h3>
+                    <input type="text" value="${url}" readonly class="w-full p-3 bg-gray-100 border-2 border-gray-300 rounded-xl text-sm mb-3">
+                    <button onclick="navigator.clipboard.writeText('${url}'); alert('Ссылка скопирована!'); this.closest('.fixed').remove();" class="w-full bg-gradient-to-r from-pink-400 to-purple-500 text-white py-3 rounded-xl font-semibold">
+                        Копировать ссылку
+                    </button>
+                </div>
+            `;
+            document.body.appendChild(modal);
         }
 
         loadWishes();
