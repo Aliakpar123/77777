@@ -49,15 +49,10 @@
         let formData = { title: '', shopUrl: '', price: '', image: '' };
         let isGuestMode = false;
         let guestWishes = [];
-        let activeTab = 'home';
-        
-        // Данные для друзей
-        let friends = [];
-        let friendRequests = [];
+        let guestOwner = null;
         let currentUser = null;
 
         function initUser() {
-            // Получаем данные пользователя из Telegram
             if (window.Telegram?.WebApp?.initDataUnsafe?.user) {
                 currentUser = {
                     id: window.Telegram.WebApp.initDataUnsafe.user.id,
@@ -66,7 +61,6 @@
                     lastName: window.Telegram.WebApp.initDataUnsafe.user.last_name
                 };
             } else {
-                // Демо режим для тестирования
                 currentUser = {
                     id: Date.now(),
                     username: 'demo_user',
@@ -74,41 +68,32 @@
                     lastName: 'Пользователь'
                 };
             }
-            loadFriends();
+            loadWishes();
         }
 
         function loadWishes() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const shareToken = urlParams.get('share');
-            
-            if (shareToken) {
-                loadSharedWishes(shareToken);
-            } else {
-                const saved = localStorage.getItem('merci_wishes');
-                if (saved) wishes = JSON.parse(saved);
+            // Проверяем start параметр из Telegram
+            if (window.Telegram?.WebApp?.initDataUnsafe?.start_param) {
+                const startParam = window.Telegram.WebApp.initDataUnsafe.start_param;
+                
+                if (startParam.startsWith('share_')) {
+                    loadSharedWishes(startParam.replace('share_', ''));
+                    return;
+                }
             }
-        }
-
-        function loadFriends() {
-            const saved = localStorage.getItem('merci_friends');
-            if (saved) friends = JSON.parse(saved);
             
-            const savedRequests = localStorage.getItem('merci_friend_requests');
-            if (savedRequests) friendRequests = JSON.parse(savedRequests);
+            // Обычный режим - загружаем свой список
+            const saved = localStorage.getItem('merci_wishes');
+            if (saved) wishes = JSON.parse(saved);
         }
 
-        function saveFriends() {
-            localStorage.setItem('merci_friends', JSON.stringify(friends));
-            localStorage.setItem('merci_friend_requests', JSON.stringify(friendRequests));
-        }
-
-        async function loadSharedWishes(token) {
+        function loadSharedWishes(token) {
             try {
-                // В реальном приложении здесь будет запрос к серверу
                 const saved = localStorage.getItem(`share_${token}`);
                 if (saved) {
                     const data = JSON.parse(saved);
                     guestWishes = data.wishes || [];
+                    guestOwner = data.owner || null;
                     isGuestMode = true;
                     currentView = 'mylist';
                 }
@@ -124,9 +109,9 @@
         function render() {
             const app = document.getElementById('app');
             
-            if (activeTab === 'home' && currentView === 'home') {
+            if (currentView === 'home') {
                 app.innerHTML = `
-                    <div class="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 pb-24">
+                    <div class="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 pb-8">
                         <div class="px-6 pt-8 pb-6">
                             <div class="flex items-center gap-3 mb-6">
                                 <div class="bg-gradient-to-br from-pink-400 to-purple-500 p-3 rounded-2xl shadow-lg text-3xl">
@@ -169,213 +154,18 @@
                         </div>
                     </div>
                 `;
-            } else if (activeTab === 'friends') {
-                const pendingRequests = friendRequests.filter(r => r.to === currentUser.id && r.status === 'pending');
+            } else if (currentView === 'mylist') {
+                const displayWishes = isGuestMode ? guestWishes : wishes;
+                const ownerName = isGuestMode ? (guestOwner?.firstName || guestOwner?.username || 'Пользователь') : 'Мой';
                 
                 app.innerHTML = `
-                    <div class="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 pb-24">
-                        <div class="px-6 pt-8 pb-6">
-                            <div class="flex items-center justify-between mb-4">
-                                <div>
-                                    <h1 class="text-3xl font-bold text-gray-800 mb-2">👥 Друзья</h1>
-                                    <p class="text-gray-500">${friends.length} друзей</p>
-                                </div>
-                                <button onclick="showAddFriendModal()" class="bg-gradient-to-r from-pink-400 to-purple-500 text-white p-3 rounded-full shadow-lg hover:shadow-xl transition-all">
-                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                                    </svg>
-                                </button>
-                            </div>
-
-                            ${pendingRequests.length > 0 ? `
-                                <div class="mb-6">
-                                    <h3 class="text-lg font-bold text-gray-700 mb-3">Запросы в друзья (${pendingRequests.length})</h3>
-                                    <div class="space-y-3">
-                                        ${pendingRequests.map(req => `
-                                            <div class="bg-white rounded-2xl p-4 shadow-lg">
-                                                <div class="flex items-center gap-3 mb-3">
-                                                    <div class="w-12 h-12 rounded-full bg-gradient-to-br from-pink-400 to-purple-500 flex items-center justify-center text-white font-bold text-lg">
-                                                        ${req.fromUsername.charAt(0).toUpperCase()}
-                                                    </div>
-                                                    <div class="flex-1">
-                                                        <div class="font-bold text-gray-800">@${req.fromUsername}</div>
-                                                        <div class="text-sm text-gray-500">Хочет добавить вас в друзья</div>
-                                                    </div>
-                                                </div>
-                                                <div class="flex gap-2">
-                                                    <button onclick="acceptFriendRequest(${req.id})" class="flex-1 bg-green-500 text-white py-2 rounded-xl font-semibold hover:bg-green-600 transition-all">
-                                                        Принять
-                                                    </button>
-                                                    <button onclick="rejectFriendRequest(${req.id})" class="flex-1 bg-gray-300 text-gray-700 py-2 rounded-xl font-semibold hover:bg-gray-400 transition-all">
-                                                        Отклонить
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        `).join('')}
-                                    </div>
-                                </div>
-                            ` : ''}
-                        </div>
-                        
-                        <div class="px-6">
-                            ${friends.length === 0 ? `
-                                <div class="bg-white rounded-3xl p-8 text-center shadow-lg">
-                                    <div class="text-6xl mb-4">👥</div>
-                                    <p class="text-gray-600 font-medium mb-4">У вас пока нет друзей</p>
-                                    <button onclick="showAddFriendModal()" class="bg-gradient-to-r from-pink-400 to-purple-500 text-white px-6 py-3 rounded-2xl font-semibold hover:shadow-lg transition-all">
-                                        Добавить друга
-                                    </button>
-                                </div>
-                            ` : `
-                                <h3 class="text-lg font-bold text-gray-700 mb-3">Мои друзья</h3>
-                                <div class="space-y-3">
-                                    ${friends.map(friend => `
-                                        <div class="bg-white rounded-2xl p-4 shadow-lg hover:shadow-xl transition-all" onclick="viewFriendWishList('${friend.username}')">
-                                            <div class="flex items-center gap-3">
-                                                <div class="w-14 h-14 rounded-full bg-gradient-to-br from-pink-400 to-purple-500 flex items-center justify-center text-white font-bold text-xl">
-                                                    ${friend.username.charAt(0).toUpperCase()}
-                                                </div>
-                                                <div class="flex-1">
-                                                    <div class="font-bold text-gray-800">${friend.firstName || friend.username}</div>
-                                                    <div class="text-sm text-gray-500">@${friend.username}</div>
-                                                    <div class="text-sm text-pink-600 mt-1">${friend.wishCount || 0} желаний</div>
-                                                </div>
-                                                <div class="text-gray-400">
-                                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                                                    </svg>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    `).join('')}
-                                </div>
-                            `}
-                        </div>
-                    </div>
-                `;
-            } else if (activeTab === 'tasks') {
-                app.innerHTML = `
-                    <div class="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 pb-24">
-                        <div class="px-6 pt-8 pb-6">
-                            <h1 class="text-3xl font-bold text-gray-800 mb-2">✨ Задания</h1>
-                            <p class="text-gray-500">Выполняйте задания и получайте бонусы</p>
-                        </div>
-                        <div class="px-6 space-y-4">
-                            <div class="bg-gradient-to-br from-blue-500 to-purple-600 rounded-3xl p-6 shadow-xl text-white">
-                                <div class="flex items-start gap-4 mb-4">
-                                    <div class="text-5xl">📢</div>
-                                    <div class="flex-1">
-                                        <h3 class="font-bold text-xl mb-1">Подписаться на канал</h3>
-                                        <p class="text-sm opacity-90 mb-3">Подпишитесь на наш Telegram канал и получите бонус!</p>
-                                        <div class="flex items-center gap-2">
-                                            <div class="bg-white/20 px-3 py-1 rounded-full text-sm">+150 баллов 💎</div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <button onclick="subscribeToChannel()" class="w-full bg-white text-purple-600 py-3 rounded-2xl font-bold hover:bg-gray-100 transition-all">
-                                    Подписаться
-                                </button>
-                            </div>
-
-                            <div class="bg-gradient-to-br from-pink-500 to-rose-600 rounded-3xl p-6 shadow-xl text-white">
-                                <div class="flex items-start gap-4 mb-4">
-                                    <div class="text-5xl">👥</div>
-                                    <div class="flex-1">
-                                        <h3 class="font-bold text-xl mb-1">Пригласить друга</h3>
-                                        <p class="text-sm opacity-90 mb-3">За каждого приглашенного друга вы получаете бонус</p>
-                                        <div class="flex items-center gap-2">
-                                            <div class="bg-white/20 px-3 py-1 rounded-full text-sm">+200 баллов 🎁</div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <button onclick="inviteFriend()" class="w-full bg-white text-pink-600 py-3 rounded-2xl font-bold hover:bg-gray-100 transition-all">
-                                    Пригласить
-                                </button>
-                            </div>
-
-                            <div class="bg-white rounded-3xl p-6 shadow-lg">
-                                <div class="flex items-center gap-4">
-                                    <div class="text-4xl">🎯</div>
-                                    <div class="flex-1">
-                                        <h3 class="font-bold text-gray-800">Добавить 5 желаний</h3>
-                                        <p class="text-sm text-gray-500 mb-2">Создайте свой wish list</p>
-                                        <div class="flex items-center gap-2">
-                                            <div class="flex-1 bg-gray-200 rounded-full h-2">
-                                                <div class="bg-pink-500 rounded-full h-2 transition-all" style="width: ${Math.min((wishes.length / 5) * 100, 100)}%"></div>
-                                            </div>
-                                            <span class="text-sm font-bold text-pink-600">${wishes.length}/5</span>
-                                        </div>
-                                    </div>
-                                    <div class="text-gray-400 font-bold">+50</div>
-                                </div>
-                            </div>
-
-                            <div class="bg-white rounded-3xl p-6 shadow-lg">
-                                <div class="flex items-center gap-4">
-                                    <div class="text-4xl">🔗</div>
-                                    <div class="flex-1">
-                                        <h3 class="font-bold text-gray-800">Поделиться списком</h3>
-                                        <p class="text-sm text-gray-500">Отправьте ссылку друзьям</p>
-                                    </div>
-                                    <div class="text-gray-400 font-bold">+30</div>
-                                </div>
-                            </div>
-
-                            <div class="bg-white rounded-3xl p-6 shadow-lg">
-                                <div class="flex items-center gap-4">
-                                    <div class="text-4xl">📸</div>
-                                    <div class="flex-1">
-                                        <h3 class="font-bold text-gray-800">Добавить фото</h3>
-                                        <p class="text-sm text-gray-500">Добавьте фото к любому желанию</p>
-                                    </div>
-                                    <div class="text-gray-400 font-bold">+20</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            } else if (activeTab === 'rating') {
-                app.innerHTML = `
-                    <div class="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 pb-24">
-                        <div class="px-6 pt-8 pb-6">
-                            <h1 class="text-3xl font-bold text-gray-800 mb-2">🏆 Рейтинг</h1>
-                            <p class="text-gray-500">Топ пользователей Merci</p>
-                        </div>
-                        <div class="px-6">
-                            <div class="bg-gradient-to-r from-yellow-400 to-orange-500 rounded-3xl p-6 shadow-xl mb-6 text-white">
-                                <div class="flex items-center gap-4">
-                                    <div class="text-6xl">👑</div>
-                                    <div>
-                                        <div class="text-sm opacity-90">Ваш рейтинг</div>
-                                        <div class="text-3xl font-bold">0 баллов</div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="space-y-3">
-                                ${[1,2,3,4,5].map((i) => `
-                                    <div class="bg-white rounded-2xl p-4 shadow-lg flex items-center gap-3">
-                                        <div class="text-2xl font-bold ${i === 1 ? 'text-yellow-500' : i === 2 ? 'text-gray-400' : i === 3 ? 'text-orange-600' : 'text-gray-500'}">${i}</div>
-                                        <div class="w-12 h-12 rounded-full bg-gradient-to-br from-pink-400 to-purple-500 flex items-center justify-center text-white font-bold">U${i}</div>
-                                        <div class="flex-1">
-                                            <div class="font-bold text-gray-800">Пользователь ${i}</div>
-                                            <div class="text-sm text-gray-500">${1000 - i * 100} баллов</div>
-                                        </div>
-                                        ${i <= 3 ? `<div class="text-2xl">${i === 1 ? '🥇' : i === 2 ? '🥈' : '🥉'}</div>` : ''}
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>
-                    </div>
-                `;
-            } else if (currentView === 'mylist') {
-                app.innerHTML = `
-                    <div class="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 pb-24 px-6">
+                    <div class="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 pb-8 px-6">
                         <div class="flex items-center justify-between mb-6 mt-8">
                             <button onclick="goHome()" class="text-pink-500 font-medium flex items-center gap-1">
                                 <span>←</span> ${isGuestMode ? 'Закрыть' : 'Назад'}
                             </button>
                         </div>
-                        <h2 class="text-2xl font-bold mb-6 text-gray-700">${isGuestMode ? '🎁 Wish List' : 'Мой Wish List'}</h2>
+                        <h2 class="text-2xl font-bold mb-6 text-gray-700">${isGuestMode ? '🎁 ' + ownerName : ownerName} Wish List</h2>
 
                         ${!showAddForm && !isGuestMode ? `
                             <button onclick="toggleAddForm()" class="w-full bg-gradient-to-r from-pink-400 to-purple-500 rounded-3xl p-6 shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 text-white font-semibold mb-4">
@@ -387,7 +177,7 @@
                                 </svg>
                                 Поделиться Wish List
                             </button>
-                        ` : `
+                        ` : !isGuestMode ? `
                             <div class="bg-white rounded-3xl p-6 shadow-lg mb-6">
                                 <div class="flex justify-between items-center mb-4">
                                     <h3 class="text-xl font-bold text-gray-800">${editingId ? 'Редактировать' : 'Новое желание'}</h3>
@@ -415,16 +205,16 @@
                                     ${editingId ? 'Сохранить' : 'Добавить'}
                                 </button>
                             </div>
-                        `}
+                        ` : ''}
 
-                        ${(wishes.length === 0 && guestWishes.length === 0) && !showAddForm ? `
+                        ${displayWishes.length === 0 && !showAddForm ? `
                             <div class="bg-white rounded-3xl p-8 text-center shadow-lg mt-6">
                                 <div class="text-6xl mb-4">💝</div>
                                 <p class="text-gray-600 font-medium">${isGuestMode ? 'Список пуст' : 'Начните создавать свой список желаний!'}</p>
                             </div>
                         ` : `
                             <div class="space-y-4 mt-6">
-                                ${(isGuestMode ? guestWishes : wishes).map(wish => `
+                                ${displayWishes.map(wish => `
                                     <div class="bg-white rounded-3xl shadow-lg overflow-hidden">
                                         ${wish.image ? `
                                             <a href="${wish.shopUrl || '#'}" ${wish.shopUrl ? 'target="_blank"' : ''} class="block">
@@ -453,64 +243,12 @@
                     </div>
                 `;
             }
-
-            // Нижняя навигация
-            if (!isGuestMode) {
-                const nav = document.createElement('div');
-                nav.className = 'fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-2xl z-50';
-                nav.innerHTML = `
-                    <div class="max-w-md mx-auto px-4 py-2">
-                        <div class="flex justify-around items-center">
-                            <button onclick="switchTab('home')" class="flex flex-col items-center py-2 px-4 rounded-2xl transition-all ${activeTab === 'home' ? 'bg-pink-100' : ''}">
-                                <svg class="w-6 h-6 ${activeTab === 'home' ? 'text-pink-600' : 'text-gray-400'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
-                                </svg>
-                                <span class="text-xs mt-1 ${activeTab === 'home' ? 'text-pink-600 font-semibold' : 'text-gray-500'}">Главная</span>
-                            </button>
-                            
-                            <button onclick="switchTab('friends')" class="flex flex-col items-center py-2 px-4 rounded-2xl transition-all relative ${activeTab === 'friends' ? 'bg-pink-100' : ''}">
-                                ${friendRequests.filter(r => r.to === currentUser.id && r.status === 'pending').length > 0 ? `
-                                    <div class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
-                                        ${friendRequests.filter(r => r.to === currentUser.id && r.status === 'pending').length}
-                                    </div>
-                                ` : ''}
-                                <svg class="w-6 h-6 ${activeTab === 'friends' ? 'text-pink-600' : 'text-gray-400'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
-                                </svg>
-                                <span class="text-xs mt-1 ${activeTab === 'friends' ? 'text-pink-600 font-semibold' : 'text-gray-500'}">Друзья</span>
-                            </button>
-                            
-                            <button onclick="switchTab('tasks')" class="flex flex-col items-center py-2 px-4 rounded-2xl transition-all ${activeTab === 'tasks' ? 'bg-pink-100' : ''}">
-                                <svg class="w-6 h-6 ${activeTab === 'tasks' ? 'text-pink-600' : 'text-gray-400'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
-                                </svg>
-                                <span class="text-xs mt-1 ${activeTab === 'tasks' ? 'text-pink-600 font-semibold' : 'text-gray-500'}">Задания</span>
-                            </button>
-                            
-                            <button onclick="switchTab('rating')" class="flex flex-col items-center py-2 px-4 rounded-2xl transition-all ${activeTab === 'rating' ? 'bg-pink-100' : ''}">
-                                <svg class="w-6 h-6 ${activeTab === 'rating' ? 'text-pink-600' : 'text-gray-400'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path>
-                                </svg>
-                                <span class="text-xs mt-1 ${activeTab === 'rating' ? 'text-pink-600 font-semibold' : 'text-gray-500'}">Рейтинг</span>
-                            </button>
-                        </div>
-                    </div>
-                `;
-                document.body.appendChild(nav);
-            }
-        }
-
-        function switchTab(tab) {
-            activeTab = tab;
-            currentView = 'home';
-            render();
         }
 
         function goHome() { 
             if (isGuestMode) {
                 window.location.href = window.location.origin + window.location.pathname;
             } else {
-                activeTab = 'home';
                 currentView = 'home';
                 render();
             }
@@ -596,110 +334,6 @@
             }
         }
 
-        // Функции для работы с друзьями
-        function showAddFriendModal() {
-            const modal = document.createElement('div');
-            modal.className = 'fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-fadeIn';
-            modal.onclick = (e) => {
-                if (e.target === modal) modal.remove();
-            };
-            modal.innerHTML = `
-                <div class="bg-white rounded-3xl p-6 shadow-2xl max-w-sm mx-4 transform animate-slideUp w-full" onclick="event.stopPropagation()">
-                    <h3 class="text-xl font-bold text-gray-800 mb-4">Добавить друга</h3>
-                    <p class="text-sm text-gray-600 mb-4">Введите username друга в Telegram</p>
-                    <input type="text" id="friendUsername" placeholder="@username" class="w-full p-3 border-2 border-gray-200 rounded-xl mb-4 focus:border-pink-400 focus:outline-none">
-                    <div class="flex gap-2">
-                        <button onclick="this.closest('.fixed').remove()" class="flex-1 bg-gray-200 text-gray-700 py-3 rounded-xl font-semibold hover:bg-gray-300 transition-all">
-                            Отмена
-                        </button>
-                        <button onclick="sendFriendRequest()" class="flex-1 bg-gradient-to-r from-pink-400 to-purple-500 text-white py-3 rounded-xl font-semibold hover:shadow-lg transition-all">
-                            Добавить
-                        </button>
-                    </div>
-                </div>
-            `;
-            document.body.appendChild(modal);
-            setTimeout(() => document.getElementById('friendUsername')?.focus(), 100);
-        }
-
-        function sendFriendRequest() {
-            const input = document.getElementById('friendUsername');
-            let username = input?.value.trim();
-            
-            if (!username) return alert('Введите username!');
-            
-            // Убираем @ если есть
-            username = username.replace('@', '');
-            
-            // Проверяем, не добавляем ли мы себя
-            if (username === currentUser.username) {
-                return alert('Вы не можете добавить себя в друзья!');
-            }
-            
-            // Проверяем, не друг ли уже
-            if (friends.find(f => f.username === username)) {
-                return alert('Этот пользователь уже в вашем списке друзей!');
-            }
-            
-            // Проверяем, не отправлен ли уже запрос
-            if (friendRequests.find(r => r.toUsername === username && r.from === currentUser.id)) {
-                return alert('Запрос уже отправлен!');
-            }
-            
-            // Создаем запрос
-            const request = {
-                id: Date.now(),
-                from: currentUser.id,
-                fromUsername: currentUser.username,
-                to: `user_${username}`, // В реальном приложении здесь будет ID из базы
-                toUsername: username,
-                status: 'pending',
-                createdAt: new Date().toISOString()
-            };
-            
-            friendRequests.push(request);
-            saveFriends();
-            
-            document.querySelector('.fixed')?.remove();
-            alert(`Запрос отправлен @${username}!`);
-        }
-
-        function acceptFriendRequest(requestId) {
-            const request = friendRequests.find(r => r.id === requestId);
-            if (!request) return;
-            
-            // Добавляем в друзья
-            friends.push({
-                id: request.from,
-                username: request.fromUsername,
-                firstName: request.fromUsername,
-                addedAt: new Date().toISOString(),
-                wishCount: Math.floor(Math.random() * 10) // В реальности - из базы
-            });
-            
-            // Обновляем статус запроса
-            request.status = 'accepted';
-            
-            saveFriends();
-            render();
-        }
-
-        function rejectFriendRequest(requestId) {
-            if (confirm('Отклонить запрос в друзья?')) {
-                const request = friendRequests.find(r => r.id === requestId);
-                if (request) {
-                    request.status = 'rejected';
-                    saveFriends();
-                    render();
-                }
-            }
-        }
-
-        function viewFriendWishList(username) {
-            // В реальном приложении здесь будет загрузка списка друга
-            alert(`Просмотр wish list @${username} будет доступен в следующей версии!`);
-        }
-
         function showBrandModal(brandName) {
             const modal = document.createElement('div');
             modal.className = 'fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-fadeIn';
@@ -729,19 +363,26 @@
             const token = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
             const shareData = {
                 wishes: wishes,
+                owner: {
+                    username: currentUser.username,
+                    firstName: currentUser.firstName
+                },
                 createdAt: new Date().toISOString()
             };
 
-            // Сохраняем в localStorage для демо (в реальности - на сервер)
+            // Сохраняем в localStorage
             localStorage.setItem(`share_${token}`, JSON.stringify(shareData));
 
-            const shareUrl = `${window.location.origin}${window.location.pathname}?share=${token}`;
-            const text = `🎁 Мой Wish List в Merci!\n\nУ меня ${wishes.length} ${wishes.length === 1 ? 'желание' : 'желаний'}.\n\nПосмотрите мой список:`;
+            const tgLink = `https://t.me/merciwishlitbot?start=share_${token}`;
+            const text = `🎁 Мой Wish List в Merci!\n\nУ меня ${wishes.length} ${wishes.length === 1 ? 'желание' : wishes.length < 5 ? 'желания' : 'желаний'}.\n\nПосмотрите мой список:`;
             
-            if (navigator.share) {
-                navigator.share({ title: 'Мой Wish List', text, url: shareUrl });
+            if (window.Telegram?.WebApp) {
+                const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(tgLink)}&text=${encodeURIComponent(text)}`;
+                window.Telegram.WebApp.openTelegramLink(shareUrl);
+            } else if (navigator.share) {
+                navigator.share({ title: 'Мой Wish List', text: text + '\n' + tgLink });
             } else {
-                showShareModal(shareUrl);
+                showShareModal(tgLink);
             }
         }
 
@@ -763,23 +404,7 @@
             document.body.appendChild(modal);
         }
 
-        function subscribeToChannel() {
-            alert('Функция подписки на канал будет реализована!');
-        }
-
-        function inviteFriend() {
-            const inviteUrl = `${window.location.origin}${window.location.pathname}?ref=${currentUser.id}`;
-            const text = `Присоединяйся к Merci Wish List! 🎁\n\nСоздавай списки желаний и делись ими с друзьями!`;
-            
-            if (navigator.share) {
-                navigator.share({ title: 'Merci Wish List', text, url: inviteUrl });
-            } else {
-                showShareModal(inviteUrl);
-            }
-        }
-
         initUser();
-        loadWishes();
         render();
     </script>
 </body>
