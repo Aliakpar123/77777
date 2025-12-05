@@ -154,35 +154,80 @@
                             <h1 class="text-3xl font-bold text-gray-800 mb-2">✨ Задания</h1>
                             <p class="text-gray-500">Выполняйте задания и получайте бонусы</p>
                         </div>
-                        <div class="px-6">
-                            <div class="bg-white rounded-3xl p-6 shadow-lg mb-4">
+                        <div class="px-6 space-y-4">
+                            <!-- Подписка на канал -->
+                            <div class="bg-gradient-to-br from-blue-500 to-purple-600 rounded-3xl p-6 shadow-xl text-white">
+                                <div class="flex items-start gap-4 mb-4">
+                                    <div class="text-5xl">📢</div>
+                                    <div class="flex-1">
+                                        <h3 class="font-bold text-xl mb-1">Подписаться на канал</h3>
+                                        <p class="text-sm opacity-90 mb-3">Подпишитесь на наш Telegram канал и получите бонус!</p>
+                                        <div class="flex items-center gap-2">
+                                            <div class="bg-white/20 px-3 py-1 rounded-full text-sm">+150 баллов 💎</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button onclick="subscribeToChannel()" class="w-full bg-white text-purple-600 py-3 rounded-2xl font-bold hover:bg-gray-100 transition-all">
+                                    Подписаться
+                                </button>
+                            </div>
+
+                            <!-- Пригласить друга -->
+                            <div class="bg-gradient-to-br from-pink-500 to-rose-600 rounded-3xl p-6 shadow-xl text-white">
+                                <div class="flex items-start gap-4 mb-4">
+                                    <div class="text-5xl">👥</div>
+                                    <div class="flex-1">
+                                        <h3 class="font-bold text-xl mb-1">Пригласить друга</h3>
+                                        <p class="text-sm opacity-90 mb-3">За каждого приглашенного друга вы получаете бонус</p>
+                                        <div class="flex items-center gap-2">
+                                            <div class="bg-white/20 px-3 py-1 rounded-full text-sm">+200 баллов 🎁</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button onclick="inviteFriend()" class="w-full bg-white text-pink-600 py-3 rounded-2xl font-bold hover:bg-gray-100 transition-all">
+                                    Пригласить
+                                </button>
+                            </div>
+
+                            <!-- Добавить 5 желаний -->
+                            <div class="bg-white rounded-3xl p-6 shadow-lg">
                                 <div class="flex items-center gap-4">
                                     <div class="text-4xl">🎯</div>
                                     <div class="flex-1">
                                         <h3 class="font-bold text-gray-800">Добавить 5 желаний</h3>
-                                        <p class="text-sm text-gray-500">Награда: +50 баллов</p>
+                                        <p class="text-sm text-gray-500 mb-2">Создайте свой wish list</p>
+                                        <div class="flex items-center gap-2">
+                                            <div class="flex-1 bg-gray-200 rounded-full h-2">
+                                                <div class="bg-pink-500 rounded-full h-2 transition-all" style="width: ${Math.min((wishes.length / 5) * 100, 100)}%"></div>
+                                            </div>
+                                            <span class="text-sm font-bold text-pink-600">${wishes.length}/5</span>
+                                        </div>
                                     </div>
-                                    <div class="text-pink-600 font-bold">${wishes.length}/5</div>
+                                    <div class="text-gray-400 font-bold">+50</div>
                                 </div>
                             </div>
-                            <div class="bg-white rounded-3xl p-6 shadow-lg mb-4">
-                                <div class="flex items-center gap-4">
-                                    <div class="text-4xl">👥</div>
-                                    <div class="flex-1">
-                                        <h3 class="font-bold text-gray-800">Пригласить друга</h3>
-                                        <p class="text-sm text-gray-500">Награда: +100 баллов</p>
-                                    </div>
-                                    <div class="text-pink-600 font-bold">0/1</div>
-                                </div>
-                            </div>
+
+                            <!-- Поделиться списком -->
                             <div class="bg-white rounded-3xl p-6 shadow-lg">
                                 <div class="flex items-center gap-4">
                                     <div class="text-4xl">🔗</div>
                                     <div class="flex-1">
                                         <h3 class="font-bold text-gray-800">Поделиться списком</h3>
-                                        <p class="text-sm text-gray-500">Награда: +30 баллов</p>
+                                        <p class="text-sm text-gray-500">Отправьте ссылку друзьям</p>
                                     </div>
-                                    <div class="text-pink-600 font-bold">0/1</div>
+                                    <div class="text-gray-400 font-bold">+30</div>
+                                </div>
+                            </div>
+
+                            <!-- Добавить фото к желанию -->
+                            <div class="bg-white rounded-3xl p-6 shadow-lg">
+                                <div class="flex items-center gap-4">
+                                    <div class="text-4xl">📸</div>
+                                    <div class="flex-1">
+                                        <h3 class="font-bold text-gray-800">Добавить фото</h3>
+                                        <p class="text-sm text-gray-500">Добавьте фото к любому желанию</p>
+                                    </div>
+                                    <div class="text-gray-400 font-bold">+20</div>
                                 </div>
                             </div>
                         </div>
@@ -268,7 +313,7 @@
                                     </div>
                                 ` : ''}
                                 
-                                <input type="text" id="wishPrice" placeholder="Цена (например: 5000 ₽)" value="${formData.price}" class="w-full p-3 border-2 border-gray-200 rounded-2xl mb-3 focus:border-pink-400 focus:outline-none">
+                                <input type="text" id="wishPrice" placeholder="Цена (например: 5000 ₸)" value="${formData.price}" class="w-full p-3 border-2 border-gray-200 rounded-2xl mb-3 focus:border-pink-400 focus:outline-none">
                                 
                                 <input type="url" id="shopUrl" placeholder="Ссылка на магазин" value="${formData.shopUrl}" class="w-full p-3 border-2 border-gray-200 rounded-2xl mb-4 focus:border-pink-400 focus:outline-none">
                                 
@@ -484,25 +529,15 @@
                 createdAt: new Date().toISOString()
             };
 
-            // Сохраняем в публичное хранилище
-            window.storage.set(`share_${token}`, JSON.stringify(shareData), true)
-                .then(() => {
-                    const shareUrl = `${window.location.origin}${window.location.pathname}?share=${token}`;
-                    const text = `🎁 Мой Wish List в Merci!\n\nУ меня ${wishes.length} ${wishes.length === 1 ? 'желание' : 'желаний'}.\n\nПосмотрите мой список:`;
-                    
-                    if (window.Telegram?.WebApp) {
-                        window.Telegram.WebApp.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(text)}`);
-                    } else if (navigator.share) {
-                        navigator.share({ title: 'Мой Wish List', text, url: shareUrl });
-                    } else {
-                        // Показываем ссылку для копирования
-                        showShareModal(shareUrl);
-                    }
-                })
-                .catch(err => {
-                    console.error('Share error:', err);
-                    alert('Не удалось создать ссылку для обмена');
-                });
+            // Имитация сохранения (в реальности нужен backend)
+            const shareUrl = `${window.location.origin}${window.location.pathname}?share=${token}`;
+            const text = `🎁 Мой Wish List в Merci!\n\nУ меня ${wishes.length} ${wishes.length === 1 ? 'желание' : 'желаний'}.\n\nПосмотрите мой список:`;
+            
+            if (navigator.share) {
+                navigator.share({ title: 'Мой Wish List', text, url: shareUrl });
+            } else {
+                showShareModal(shareUrl);
+            }
         }
 
         function showShareModal(url) {
@@ -521,6 +556,14 @@
                 </div>
             `;
             document.body.appendChild(modal);
+        }
+
+        function subscribeToChannel() {
+            alert('Функция подписки на канал будет реализована!');
+        }
+
+        function inviteFriend() {
+            alert('Функция приглашения друзей будет реализована!');
         }
 
         loadWishes();
